@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 import com.cuadra.cuadra.model.Usuario;
+import com.cuadra.cuadra.service.SaludService;
 import com.cuadra.cuadra.service.UsuarioService;
 
 @RestController
@@ -19,6 +20,9 @@ public class UsuarioController {
     
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private SaludService saludService;
 
     // 1. Registrar Usuario
     @PostMapping("/registrar")
@@ -31,11 +35,15 @@ public class UsuarioController {
         }
     }
 
-    // 2. Autenticar Usuario (para login)
+    // 2. Autenticar Usuario (modificado para recibir clave única)
     @PostMapping("/login")
-    public ResponseEntity<Usuario> autenticarUsuario(@RequestParam String nombreUsuario, @RequestParam String contrasena) {
+    public ResponseEntity<Usuario> autenticarUsuario(
+            @RequestParam String nombreUsuario, 
+            @RequestParam String contrasena,
+            @RequestParam String claveUnica) { 
+
         try {
-            Usuario usuarioAutenticado = usuarioService.autenticarUsuario(nombreUsuario, contrasena);
+            Usuario usuarioAutenticado = usuarioService.autenticarUsuario(nombreUsuario, contrasena, claveUnica);
             return new ResponseEntity<>(usuarioAutenticado, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
@@ -94,6 +102,18 @@ public class UsuarioController {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    // 8. Calcular IMC (requiere autenticación y autorización)
+    @GetMapping("/{id}/salud")
+    public ResponseEntity<Double> calcularIMC(@PathVariable Long id) {
+        try {
+            Usuario usuario = usuarioService.obtenerUsuarioPorId(id);
+            double imc = saludService.calcularIMC(usuario.getPesoActual(), usuario.getAltura());
+            return new ResponseEntity<>(imc, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 }

@@ -17,17 +17,15 @@ public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @Column(unique = true, nullable = false)
     private String nombreUsuario;
-
     @Column(nullable = false)
     private String contrasena;
-
     private String nombreCompleto;
     private LocalDate fechaNacimiento;
     private String sexo;
     private Double pesoActual;
+    private Double altura;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "dispositivo_id", referencedColumnName = "id")
@@ -96,5 +94,13 @@ public class Usuario {
 
     public void setDispositivo(Dispositivo dispositivo) {
         this.dispositivo = dispositivo;
+    }
+
+    public Double getAltura() {
+        return altura;
+    }
+
+    public void setAltura(Double altura) {
+        this.altura = altura;
     }
 }

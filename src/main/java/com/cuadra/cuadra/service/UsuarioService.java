@@ -1,6 +1,8 @@
 package com.cuadra.cuadra.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -8,6 +10,7 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.cuadra.cuadra.model.Dispositivo;
 import com.cuadra.cuadra.model.Usuario;
@@ -23,25 +26,39 @@ public class UsuarioService {
     @Autowired
     private DispositivoRepository dispositivoRepository;
 
+    @Autowired
+    private SaludService saludService; 
+
     // 1. Registrar Usuario
+    @Transactional
     public Usuario registrarUsuario(Usuario usuario) {
         usuario.getDispositivo().setClaveUnica(UUID.randomUUID().toString());
-        return usuarioRepository.save(usuario);
+        usuario.getDispositivo().setActivo(true); // Establecer el dispositivo como activo por defecto
+        Usuario nuevoUsuario = usuarioRepository.save(usuario);
+        return nuevoUsuario;
     }
 
-    // 2. Autenticar Usuario (para login)
-    public Usuario autenticarUsuario(String nombreUsuario, String contrasena) throws Exception {
+    // 2. Autenticar Usuario (con validación de clave única y actualización de último acceso)
+    @Transactional
+    public Usuario autenticarUsuario(String nombreUsuario, String contrasena, String claveUnica) throws Exception {
         Optional<Usuario> usuarioOptional = usuarioRepository.findByNombreUsuario(nombreUsuario);
 
         if (usuarioOptional.isPresent()) {
             Usuario usuario = usuarioOptional.get();
-            if (contrasena.equals(usuario.getContrasena())) {
-                Dispositivo dispositivo = usuario.getDispositivo();
-                dispositivo.setUltimoAcceso(LocalDateTime.now());
+            Dispositivo dispositivo = usuario.getDispositivo();
+
+            if (contrasena.equals(usuario.getContrasena()) && 
+                claveUnica.equals(dispositivo.getClaveUnica()) &&
+                dispositivo.isActivo()) { 
+
+                // Actualizar último acceso y tiempo activo
+                LocalDateTime ahora = LocalDateTime.now();
+                dispositivo.setUltimoAcceso(ahora);
+
                 dispositivoRepository.save(dispositivo);
                 return usuario;
             } else {
-                throw new Exception("Contraseña incorrecta."); 
+                throw new Exception("Credenciales incorrectas o dispositivo no activo."); 
             }
         } else {
             throw new Exception("Usuario no encontrado."); 
@@ -63,6 +80,7 @@ public class UsuarioService {
     }
 
     // 5. Actualizar usuario
+    @Transactional
     public Usuario actualizarUsuario(Long usuarioId, Usuario usuarioActualizado) {
         try {
             Usuario usuarioExistente = usuarioRepository.findById(usuarioId).orElseThrow();
@@ -75,6 +93,7 @@ public class UsuarioService {
     }
 
     // 6. Desactivar usuario
+    @Transactional
     public void desactivarUsuario(Long usuarioId) {
         try {
             Usuario usuario = usuarioRepository.findById(usuarioId).orElseThrow();
@@ -86,6 +105,7 @@ public class UsuarioService {
     }
 
     // 7. Activar usuario
+    @Transactional
     public void activarUsuario(Long usuarioId) {
         try {
             Usuario usuario = usuarioRepository.findById(usuarioId).orElseThrow();
@@ -94,5 +114,29 @@ public class UsuarioService {
         } catch (NoSuchElementException e) {
             throw new RuntimeException("Usuario no encontrado con ID: " + usuarioId);
         }
+    }
+
+    // 8. Obtener información de salud del usuario
+    public com.cuadra.cuadra.model.SaludDTO obtenerInformacionSalud(Long usuarioId) {
+        Usuario usuario = obtenerUsuarioPorId(usuarioId);
+
+        double imc = saludService.calcularIMC(usuario.getPesoActual(), usuario.getAltura());
+        double pesoIdeal = saludService.calcularPesoIdeal(usuario.getSexo(), usuario.getAltura());
+        String presionArterialIdeal = saludService.calcularPresionArterialIdeal(calcularEdad(usuario.getFechaNacimiento()));
+
+        com.cuadra.cuadra.model.SaludDTO saludDTO = new com.cuadra.cuadra.model.SaludDTO();
+        saludDTO.setImc(imc);
+        saludDTO.setPesoIdeal(pesoIdeal);
+        saludDTO.setPresionArterialIdeal(presionArterialIdeal);
+
+        return saludDTO;
+    }
+
+    // Método auxiliar para calcular la edad a partir de la fecha de nacimiento
+    private int calcularEdad(LocalDate fechaNacimiento) {
+        if (fechaNacimiento == null) {
+            return 0; // Manejar el caso donde la fecha de nacimiento es nula
+        }
+        return Period.between(fechaNacimiento, LocalDate.now()).getYears();
     }
 }

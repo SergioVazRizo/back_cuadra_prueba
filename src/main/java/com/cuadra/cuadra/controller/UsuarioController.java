@@ -14,6 +14,7 @@ import com.cuadra.cuadra.service.UsuarioService;
 
 @RestController
 @RequestMapping("/api/usuarios")
+@CrossOrigin
 public class UsuarioController {
     
     @Autowired

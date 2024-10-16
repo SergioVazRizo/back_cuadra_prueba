@@ -3,19 +3,22 @@ package com.cuadra.cuadra.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.neo4j.Neo4jProperties.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 
+import com.cuadra.cuadra.model.SaludDTO;
 import com.cuadra.cuadra.model.Usuario;
 import com.cuadra.cuadra.service.SaludService;
 import com.cuadra.cuadra.service.UsuarioService;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @RestController
 @RequestMapping("/api/usuarios")
-@CrossOrigin
+@CrossOrigin(origins = "http://localhost:8080")
 public class UsuarioController {
     
     @Autowired
@@ -23,6 +26,35 @@ public class UsuarioController {
 
     @Autowired
     private SaludService saludService;
+
+    // Endpoint para obtener el perfil del usuario autenticado
+    @GetMapping("/perfil") 
+    public ResponseEntity<Usuario> obtenerPerfilUsuario() {
+        Authentication authentication = (Authentication) SecurityContextHolder.getContext().getAuthentication();
+        String nombreUsuario = authentication.getUsername(); 
+
+        try {
+            Usuario usuario = usuarioService.obtenerUsuarioPorNombreUsuario(nombreUsuario);
+            return new ResponseEntity<>(usuario, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    // Endpoint para obtener la información de salud del usuario autenticado
+    @GetMapping("/salud")
+    public ResponseEntity<SaludDTO> obtenerInformacionSalud() {
+        Authentication authentication = (Authentication) SecurityContextHolder.getContext().getAuthentication();
+        String nombreUsuario = authentication.getUsername(); 
+
+        try {
+            Usuario usuario = usuarioService.obtenerUsuarioPorNombreUsuario(nombreUsuario);
+            SaludDTO saludDTO = usuarioService.obtenerInformacionSalud(usuario.getId());
+            return new ResponseEntity<>(saludDTO, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
 
     // 1. Registrar Usuario
     @PostMapping("/registrar")

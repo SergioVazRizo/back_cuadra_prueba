@@ -27,7 +27,7 @@ public class UsuarioController {
     @Autowired
     private SaludService saludService;
 
-    // Endpoint para obtener el perfil del usuario autenticado
+    // Obtener perfil del usuario identificado
     @GetMapping("/perfil") 
     public ResponseEntity<Usuario> obtenerPerfilUsuario() {
         Authentication authentication = (Authentication) SecurityContextHolder.getContext().getAuthentication();
@@ -41,7 +41,7 @@ public class UsuarioController {
         }
     }
 
-    // Endpoint para obtener la información de salud del usuario autenticado
+    // Obtener perfil de salud del usuario identificado
     @GetMapping("/salud")
     public ResponseEntity<SaludDTO> obtenerInformacionSalud() {
         Authentication authentication = (Authentication) SecurityContextHolder.getContext().getAuthentication();
@@ -67,7 +67,7 @@ public class UsuarioController {
         }
     }
 
-    // 2. Autenticar Usuario (modificado para recibir clave única)
+    // 2. Autenticar Usuario (recibe clave única)
     @PostMapping("/login")
     public ResponseEntity<Usuario> autenticarUsuario(
             @RequestParam String nombreUsuario, 
@@ -82,7 +82,7 @@ public class UsuarioController {
         }
     }
 
-    // 3. Obtener todos los usuarios (solo para administradores - requiere autenticación y autorización)
+    // 3. Obtener todos los usuarios (requiere autenticación y autorización)
     @GetMapping
     public ResponseEntity<List<Usuario>> obtenerTodosLosUsuarios() {
         try {
@@ -93,7 +93,7 @@ public class UsuarioController {
         }
     }
 
-    // 4. Obtener usuario por ID (requiere autenticación y autorización)
+    // 4. Obtener usuario por ID
     @GetMapping("/{id}")
     public ResponseEntity<Usuario> obtenerUsuarioPorId(@PathVariable Long id) {
         try {
@@ -104,7 +104,7 @@ public class UsuarioController {
         }
     }
 
-    // 5. Actualizar usuario (requiere autenticación y autorización)
+    // 5. Actualizar usuario
     @PutMapping("/{id}")
     public ResponseEntity<Usuario> actualizarUsuario(@PathVariable Long id, @RequestBody @Valid Usuario usuarioActualizado) {
         try {
@@ -115,7 +115,7 @@ public class UsuarioController {
         }
     }
 
-    // 6. Desactivar usuario (solo para administradores - requiere autenticación y autorización)
+    // 6. Desactivar usuario
     @PutMapping("/{id}/desactivar")
     public ResponseEntity<Void> desactivarUsuario(@PathVariable Long id) {
         try {
@@ -126,7 +126,7 @@ public class UsuarioController {
         }
     }
 
-    // 7. Activar usuario (solo para administradores - requiere autenticación y autorización)
+    // 7. Activar usuario
     @PutMapping("/{id}/activar")
     public ResponseEntity<Void> activarUsuario(@PathVariable Long id) {
         try {
@@ -137,7 +137,7 @@ public class UsuarioController {
         }
     }
 
-    // 8. Calcular IMC (requiere autenticación y autorización)
+    // 8. Calcular IMC
     @GetMapping("/{id}/salud")
     public ResponseEntity<Double> calcularIMC(@PathVariable Long id) {
         try {

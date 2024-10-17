@@ -29,6 +29,10 @@ public class UsuarioService {
     @Autowired
     private SaludService saludService; 
 
+    public Usuario obtenerPorId(Long idUsuario) {
+        return usuarioRepository.findById(idUsuario).orElse(null);
+    }
+
     // 1. Registrar Usuario
     @Transactional
     public Usuario registrarUsuario(Usuario usuario) {

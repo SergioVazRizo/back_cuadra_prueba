@@ -15,7 +15,7 @@ import com.cuadra.cuadra.service.UsuarioService;
 
 @RestController
 @RequestMapping("/api/usuarios")
-@CrossOrigin
+@CrossOrigin(origins = "http://localhost:8080") 
 public class UsuarioController {
     
     @Autowired
@@ -23,6 +23,15 @@ public class UsuarioController {
 
     @Autowired
     private SaludService saludService;
+
+    @GetMapping("/perfil/{idUsuario}")
+    public ResponseEntity<Usuario> obtenerPerfil(@PathVariable Long idUsuario) {
+        Usuario usuario = usuarioService.obtenerPorId(idUsuario);
+        if (usuario == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        return ResponseEntity.ok(usuario);
+    }
 
     // 1. Registrar Usuario
     @PostMapping("/registrar")
@@ -44,11 +53,16 @@ public class UsuarioController {
 
         try {
             Usuario usuarioAutenticado = usuarioService.autenticarUsuario(nombreUsuario, contrasena, claveUnica);
-            return new ResponseEntity<>(usuarioAutenticado, HttpStatus.OK);
+            if (usuarioAutenticado != null) {
+                return new ResponseEntity<>(usuarioAutenticado, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            }
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
     }
+
 
     // 3. Obtener todos los usuarios (solo para administradores - requiere autenticación y autorización)
     @GetMapping

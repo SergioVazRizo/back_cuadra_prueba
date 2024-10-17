@@ -15,7 +15,6 @@ import com.cuadra.cuadra.service.UsuarioService;
 
 @RestController
 @RequestMapping("/api/usuarios")
-@CrossOrigin(origins = "http://localhost:8080") 
 public class UsuarioController {
     
     @Autowired
